@@ -38,7 +38,7 @@ commands:
           # Add when this will run
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = curl https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/migration_<<parameter.flow_id>>
+            SUCCESS = curl https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/migration_<<parameters.flow_id>>
             if(( $SUCCESS==1 )); 
             then
               cd ~/project/backend
