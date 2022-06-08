@@ -23,6 +23,7 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+              aws s3 rm s3://udapeople-<<parameters.stackid>> --recursive
               aws cloudformation delete-stack  --stack-name udapeople-backend-<<parameters.stackid>> 
               aws cloudformation delete-stack  --stack-name udapeople-frontend-<<parameters.stackid>> 
               
@@ -242,12 +243,14 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Run migrations
           command: |
             cd backend
             npm install
-            pip3 install awscli
+            npm i aws-cli
             npm run migrations > migrations_dump.txt
             
 
@@ -395,7 +398,7 @@ jobs:
             if curl -s ${URL} | grep "Welcome"
             then
                 # Change this to 0 after the job fails
-              return 0
+              return 1
             else
               return 1
             fi
@@ -410,7 +413,9 @@ jobs:
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
-      - checkout 
+      - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
@@ -423,7 +428,7 @@ jobs:
             --stack-name udapeople-cloudfront \
             --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople 
-            echo "old workflow id:${OldWorkflowID}"
+           
       # Here's where you will add some code to rollback on failure  
       - revert-migrations:
            flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
