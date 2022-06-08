@@ -35,7 +35,7 @@ commands:
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
             SUCCESS = curl https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/migration_<<parameters.flow_id>>
@@ -66,7 +66,7 @@ jobs:
           paths: [frontend/node_modules]
           key: frontend-build
       
-      - notify_slack
+      #- notify_slack
 
   build-backend:
     docker:
@@ -85,7 +85,7 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-      - notify_slack
+      #- notify_slack
   
   test-frontend:
     docker:
@@ -101,7 +101,7 @@ jobs:
             cd frontend
             npm install
             npm run test
-      - notify_slack         
+      #- notify_slack         
   
   test-backend:
     docker:
@@ -137,7 +137,7 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --force
            
-      - notify_slack 
+      #- notify_slack 
 
   scan-backend:
     docker:
@@ -156,7 +156,7 @@ jobs:
             npm audit fix --force
             
 
-      - notify_slack 
+     # - notify_slack 
 
   deploy-infrastructure:
     docker: 
@@ -313,16 +313,32 @@ jobs:
       # Checkout code from git
       # Add ssh keys with fingerprint
       # attach workspace
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["64:eb:89:8e:be:af:5a:b8:90:c9:a2:54:5a:4d:e7:b6"] # You can get this ID in the section where you registered the SSH Key
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add --update ansible
+            apk add tar gzip
+            pip3 install awscli
       - run:
           name: Deploy backend
           command: |
-            # your code here
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            tar -C backend -czvf artifact.tar.gz
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
-
+      - destroy-environment:
+           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
   smoke-test:
     docker:
       - image: alpine:latest
