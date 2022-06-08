@@ -168,6 +168,7 @@ jobs:
       - run:
           name: install tar and gzip
           command: |
+             exit 1
              yum install -y tar gzip
       - run:
           name: Ensure back-end infrastructure exists
@@ -194,6 +195,8 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> ./.circleci/ansible/inventory.txt
+
+              
       - persist_to_workspace:
           root: ~/
           paths:
