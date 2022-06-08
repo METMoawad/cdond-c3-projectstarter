@@ -66,7 +66,7 @@ jobs:
           paths: [frontend/node_modules]
           key: frontend-build
       
-      #- notify_slack
+      - notify_slack
 
   build-backend:
     docker:
@@ -85,7 +85,7 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-      #- notify_slack
+      - notify_slack
   
   test-frontend:
     docker:
@@ -101,7 +101,7 @@ jobs:
             cd frontend
             npm install
             npm run test
-      #- notify_slack         
+      - notify_slack         
   
   test-backend:
     docker:
@@ -137,7 +137,7 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --force
            
-      #- notify_slack 
+      - notify_slack 
 
   scan-backend:
     docker:
@@ -156,7 +156,7 @@ jobs:
             npm audit fix --force
             
 
-     # - notify_slack 
+      - notify_slack 
 
   deploy-infrastructure:
     docker: 
@@ -247,6 +247,7 @@ jobs:
           command: |
             cd backend
             npm install
+            pip3 install awscli
             npm run migrations > migrations_dump.txt
             
 
@@ -347,27 +348,61 @@ jobs:
            stackid: ${CIRCLE_WORKFLOW_ID:0:7}
   smoke-test:
     docker:
-      - image: alpine:latest
+      - image: python:3.7-alpine3.11
       # Lightweight Docker image 
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add curl
+            apk add --update nodejs npm
+            pip3 install awscli
       - run:
           name: Get backend url
           command: |
-            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances  
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
+              --filters "Name=tag:Name,Values= backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            
+            export API_URL="http://${BACKEND_IP}:3030"
+           
       - run:
           name: Backend smoke test.
           command: |
-            # your code here
+
+            echo "API_URL = ${API_URL}"
+
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+
+            cat frontend/.env
+
+            echo "${API_URL}"
+            
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+              return 0
+            else
+              return 1
+            fi
       - run:
           name: Frontend smoke test.
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"
+            echo ${URL}
+            if curl -s ${URL} | grep "Welcome"
+            then
+                # Change this to 0 after the job fails
+              return 0
+            else
+              return 1
+            fi
+      - revert-migrations:
+           flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
+      - destroy-environment:
+           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
@@ -375,6 +410,7 @@ jobs:
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
+      - checkout 
       - run:
           name: Install dependencies
           command: |
@@ -382,14 +418,23 @@ jobs:
       - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
+            aws cloudformation deploy \
+            --template-file .circleci/files/cloudfront.yml \
+            --stack-name udapeople-cloudfront \
+            --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople 
+            echo "old workflow id:${OldWorkflowID}"
       # Here's where you will add some code to rollback on failure  
-
+      - revert-migrations:
+           flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
+      - destroy-environment:
+           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
 cleanup:
     docker:
-      # Docker image here
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Get old stack workflow id
           command: |
@@ -431,9 +476,9 @@ workflows:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-#      - smoke-test:
-#          requires: [deploy-backend, deploy-frontend]
-#      - cloudfront-update:
-#          requires: [smoke-test]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
 #      - cleanup:
 #          requires: [cloudfront-update]
