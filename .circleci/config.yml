@@ -1,6 +1,17 @@
 version: 2.1
-
+orbs: 
+  slack: circleci/slack@4.10.1
 commands:
+  notify_slack:
+    description: Notify a Slack channel with a error template message.
+    steps:
+      - run: echo "3rd Project Notifier"
+      - slack/notify:
+          event: fail
+          mentions: '@EngineeringTeam'
+          template: basic_fail_1
+
+            
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -12,7 +23,6 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
              aws cloudformation delete-stack --stack-name << parameters.stackid >>
 
   revert-migrations:
@@ -35,6 +45,7 @@ commands:
             fi
             
 jobs:
+  
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -48,9 +59,12 @@ jobs:
             cd frontend
             npm install
             npm run build
+
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
+      
+      - notify_slack
 
   build-backend:
     docker:
@@ -69,7 +83,8 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-
+      - notify_slack
+  
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -84,10 +99,8 @@ jobs:
             cd frontend
             npm install
             npm run test
-      # Checkout code from git
-      # Restore from cache
-      # Your job code here
-                
+      - notify_slack         
+  
   test-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -122,9 +135,7 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --force
             npm audit --audit-level=critical
-      # Checkout code from git
-      # Restore from cache
-      # Your job code here
+      - notify_slack 
 
   scan-backend:
     docker:
@@ -142,9 +153,8 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --force
             npm audit --audit-level=critical
-      # Checkout code from git
-      # Restore from cache
-      # Your job code here
+
+      - notify_slack 
 
   deploy-infrastructure:
     docker: 
@@ -152,33 +162,41 @@ jobs:
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your back-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              exit 1
+              --tags project=udapeople \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+              
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your front-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              exit 1
+              --tags project=udapeople \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+              
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            # Your code here
-            exit 1
+            aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> ./.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+
+      - destroy-environment:
+          - stackid: "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+      - destroy-environment:
+          - stackid: "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}"
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
@@ -332,11 +350,11 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-#      - deploy-infrastructure:
-#          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-#          filters:
-#            branches:
-#              only: [test-feature-branch]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [test-feature-branch]
 #      - configure-infrastructure:
 #          requires: [deploy-infrastructure]
 #      - run-migrations:
