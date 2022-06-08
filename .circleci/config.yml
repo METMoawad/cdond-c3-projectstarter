@@ -69,34 +69,34 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
 
-  test-frontend:
-    docker:
-      # Docker image here
-    steps:
+#  test-frontend:
+#    docker:
+#      # Docker image here
+#    steps:
       # Checkout code from git
       # Restore from cache
       # Your job code here
                 
-  test-backend:
-    docker:
+#  test-backend:
+#    docker:
       # Docker image here
-    steps:
+#    steps:
       # Checkout code from git
       # Restore from cache
       # Your job code here
             
-  scan-frontend:
-    docker:
+#  scan-frontend:
+#    docker:
       # Docker image here
-    steps:
+#    steps:
       # Checkout code from git
       # Restore from cache
       # Your job code here
 
-  scan-backend:
-    docker:
+#  scan-backend:
+#    docker:
       # Docker image here
-    steps:
+#    steps:
       # Checkout code from git
       # Restore from cache
       # Your job code here
@@ -138,6 +138,7 @@ jobs:
 
   configure-infrastructure:
     docker:
+      - image: python:3.7-alpine3.11
       # Docker image here that supports Ansible
     steps:
       # Checkout code from git
@@ -157,6 +158,7 @@ jobs:
 
   run-migrations:
     docker:
+       - image: circleci/node:13.8.0
       # Docker image here that supports NodeJS
     steps:
       # Checkout code from git
@@ -174,6 +176,7 @@ jobs:
 
   deploy-frontend:
     docker:
+       - image: amazon/aws-cli
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
@@ -195,6 +198,7 @@ jobs:
                     
   deploy-backend:
     docker:
+       - image: python:3.7-alpine3.11
       # Docker image here that supports Ansible
     steps:
       # Checkout code from git
@@ -212,6 +216,7 @@ jobs:
 
   smoke-test:
     docker:
+      - image: alpine:latest
       # Lightweight Docker image 
     steps:
       # Checkout code from git
@@ -235,6 +240,7 @@ jobs:
 
   cloudfront-update:
     docker:
+      - image: amazon/aws-cli
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
