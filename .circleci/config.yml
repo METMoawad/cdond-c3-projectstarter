@@ -275,14 +275,13 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - attach_workspace:
-          at: ~/
       - run:
           name: Install dependencies
           command: |
             yum update -y
             yum install -y tar gzip
             yum install -y python3
+            curl -sL https://rpm.nodesource.com/setup_10.x |  bash -
             yum install -y nodejs
             pip3 install ansible
             pip3 install awscli
@@ -334,6 +333,8 @@ jobs:
             apk add tar gzip
             apk add curl
             pip3 install awscli
+            
+            
       - run:
           name: Deploy backend
           command: |
@@ -341,7 +342,9 @@ jobs:
             npm i
             npm run build
             cd ..
-            tar -C backend -czvf artifact.tar.gz
+            tar -C backend -czvf artifact.tar.gz .
+            cp ./artifact.tar.gz  .circleci/ansible/roles/deploy/files
+
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
