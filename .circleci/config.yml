@@ -39,7 +39,7 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS=$(curl https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/migration_<<parameters.flow_id>>)
+            SUCCESS=$(curl --insecure https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/migration_<<parameters.flow_id>>)
             if(( $SUCCESS==1 )); 
             then
               cd ~/project/backend
@@ -193,7 +193,7 @@ jobs:
           command: |
               aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> ./.circleci/ansible/inventory.txt
 
               
@@ -375,7 +375,7 @@ jobs:
 
             export BACKEND_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
             
             export API_URL="http://${BACKEND_IP}:3030"
