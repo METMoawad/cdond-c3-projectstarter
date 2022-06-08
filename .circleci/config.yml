@@ -330,7 +330,9 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update ansible
+            apk add --update nodejs npm
             apk add tar gzip
+            apk add curl
             pip3 install awscli
       - run:
           name: Deploy backend
