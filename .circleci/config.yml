@@ -435,7 +435,7 @@ jobs:
            flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
       - destroy-environment:
            stackid: ${CIRCLE_WORKFLOW_ID:0:7}
-cleanup:
+  cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
@@ -467,7 +467,6 @@ cleanup:
               aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
             fi
             
-
 workflows:
   default:
     jobs:
