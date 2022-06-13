@@ -420,21 +420,32 @@ jobs:
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
-      - checkout       
+      - checkout
+      - run:
+          name: Save oldWorkflowID to kvdb
+          command: |
+            export OldWorkflowID=$(aws cloudformation \
+                    list-exports --query "Exports[?Name==\`CurrentWorkflowID\`].Value" \
+                    --no-paginate --output text| cut -d '-' -f 2)
+
+            echo "old_WorkflowID = $OldWorkflowID"
+            #save work flow id to KVDB
+            curl https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/old_WorkflowID  -d ${OldWorkflowID }
       - run:
           name: Update cloudfront distribution
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/cloudfront.yml \
-            --stack-name udapeople-cloudfront \
-            --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --tags project=udapeople 
+            --stack-name IntialStack \
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople
            
       # Here's where you will add some code to rollback on failure  
       - revert-migrations:
            flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
       - destroy-environment:
            stackid: ${CIRCLE_WORKFLOW_ID:0:7}
+  
   cleanup:
     docker:
       - image: amazon/aws-cli
@@ -446,7 +457,7 @@ jobs:
           name: Get old stack workflow id and Remove old stacks and files
           command: |
               export OldWorkflowID=$(aws cloudformation \
-                    list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                    list-exports --query "Exports[?Name==\`CurrentWorkflowID\`].Value" \
                     --no-paginate --output text| cut -d '-' -f 2)
 
               echo OldWorkflowID: "${OldWorkflowID}"
@@ -465,7 +476,37 @@ jobs:
                 aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
                
               fi
-            
+
+  prom-infra:
+    docker: 
+      - image: amazon/aws-cli
+      # Docker image here that supports AWS CLI
+    steps:
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+              aws cloudformation deploy \
+              --template-file .circleci/files/prometheusInfra.yml \
+              --tags project=udapeople \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+              aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> ./.circleci/ansible/inventory.txt
+
+              
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+
+      - destroy-environment:
+           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
+      # Here's where you will add some code to rollback on failure   
 workflows:
   default:
     jobs:
