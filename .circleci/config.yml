@@ -448,24 +448,24 @@ jobs:
   
   cleanup:
     docker:
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
     steps:
       # Checkout code from git
       - checkout
-           
+      - install_awscli
+      - install_nodejs
       - run:
           name: Get old stack workflow id and Remove old stacks and files
           command: |
-              export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+              export STACKS=($(aws cloudformation list-stacks \
+               --query "StackSummaries[*].StackName" \
               --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
 
               echo Stack names: "${STACKS[@]}"
 
-              export Old_WorkflowID = $(curl --insecure https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/old_WorkflowID )
+              export Old_WorkflowID=$(curl --insecure https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/old_WorkflowID)
 
-              #echo "OldWorkflowID ${Old_WorkflowID}"
-
-             
+              echo OldWorkflowID: $Old_WorkflowID
 
               if [[ "${STACKS[@]}" =~ "${Old_WorkflowID}" ]]
               then
