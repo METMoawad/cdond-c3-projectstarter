@@ -463,7 +463,7 @@ jobs:
 
               OldWorkflowID = $(curl --insecure https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/old_WorkflowID )
 
-              echo "OldWorkflowID: $OldWorkflowID"
+              echo "OldWorkflowID ${OldWorkflowID}"
 
              
 
