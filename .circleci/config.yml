@@ -464,13 +464,16 @@ jobs:
               export Old_WorkflowID=$(curl --insecure https://kvdb.io/YZhCDkaRF2cYuM77KVvFgh/old_WorkflowID)
 
               echo OldWorkflowID: $Old_WorkflowID
-
-              if [[ "${STACKS[@]}" =~ "${Old_WorkflowID}" ]]
+              echo CurrentCicleID:  "${CIRCLE_WORKFLOW_ID:0:7}"
+              if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${Old_WorkflowID}" ]]
               then
+                echo "--------------------Delete Confirmed----------------------"
                 echo old S3: "s3://udapeople-${Old_WorkflowID}"
                 aws s3 rm s3://udapeople-${Old_WorkflowID} --recursive
                 aws cloudformation delete-stack --stack-name "udapeople-backend-${Old_WorkflowID}"
                 aws cloudformation delete-stack --stack-name "udapeople-frontend-${Old_WorkflowID}"
+              else
+                echo "--------------------Cannot Clean ----------------------"               
               fi
 
   prom-infra:
