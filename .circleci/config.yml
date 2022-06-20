@@ -328,14 +328,14 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible
-            apk add --update nodejs npm
-            apk add tar gzip
-            apk add curl
-            pip3 install awscli
+            apk add --update ansible -y
+            apk add --update nodejs npm -y
+            apk add tar gzip -y
+            apk add curl -y
+            pip3 install awscli -y
 
       - run:
-          name: send app folder to ansible
+          name: send app folder to ansibles
           command: |
             cd backend
             npm i
@@ -350,10 +350,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-            export TYPEORM_MIGRATIONS_DIR=./migrations
-            export TYPEORM_MIGRATIONS=./migrations/*.ts
-            
+
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
