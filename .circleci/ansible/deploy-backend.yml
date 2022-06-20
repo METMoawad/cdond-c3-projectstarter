@@ -5,7 +5,7 @@
   remote_user: ubuntu
   become: true
   become_method: sudo
-  become_user: rootqwax   VDdst v  fnf   cnv cbc  vn a  
+  become_user: root
   gather_facts: false
   vars:
     - ansible_python_interpreter: /usr/bin/python3
@@ -26,9 +26,6 @@
     - TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}"
 
   pre_tasks:
-    - name: "wait 60 sec for target connection become available"
-      wait_for_connection:
-        timeout: 60
     - name: "install python"
       become: true
       raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3)
