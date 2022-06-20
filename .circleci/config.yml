@@ -192,7 +192,7 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
               aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> ./.circleci/ansible/inventory.txt
 
@@ -345,7 +345,7 @@ jobs:
             tar -czf artifact.tar.gz dist/* package*
 
             cd ..
-            cp  backend/artifact.tar.gz  .circleci/ansible/roles/deploy/files   
+            cp -v backend/artifact.tar.gz  .circleci/ansible/roles/deploy/files   
 
       - run:
           name: Deploy backend
@@ -411,10 +411,10 @@ jobs:
             else
               return 1
             fi
-#      - revert-migrations:
-#           flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
-#      - destroy-environment:
-#           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+           flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
+      - destroy-environment:
+           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
