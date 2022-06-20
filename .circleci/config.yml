@@ -414,10 +414,10 @@ jobs:
             else
               return 1
             fi
-      - revert-migrations:
-           flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
-      - destroy-environment:
-           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
+#      - revert-migrations:
+#           flow_id: ${CIRCLE_WORKFLOW_ID:0:7}      
+#      - destroy-environment:
+#           stackid: ${CIRCLE_WORKFLOW_ID:0:7}
 
   cloudfront-update:
     docker:
