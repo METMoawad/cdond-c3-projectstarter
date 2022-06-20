@@ -328,11 +328,11 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible -y
-            apk add --update nodejs npm -y
-            apk add tar gzip -y
-            apk add curl -y
-            pip3 install awscli -y
+            apk add --update ansible
+            apk add --update nodejs npm
+            apk add tar gzip
+            apk add curl
+            pip3 install awscli
 
       - run:
           name: send app folder to ansibles
