@@ -51,7 +51,7 @@ jobs:
   
   build-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
@@ -71,13 +71,13 @@ jobs:
 
   build-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
           keys: [backend-build]
       - run:
-          name: Back-end build
+          name: Back-end build 
           command: |
             cd backend
             npm install
@@ -325,6 +325,8 @@ jobs:
           fingerprints: ["b1:a6:ce:be:ba:30:b5:27:dd:b5:3b:d0:3a:1e:00:01"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
           at: ~/
+      - restore_cache:
+          keys: [backend-build]
       - run:
           name: Install dependencies
           command: |
