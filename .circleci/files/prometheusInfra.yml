@@ -35,4 +35,4 @@ Resources:
       ImageId: ami-09d56f8956ab235b3
       Tags:
         - Key: Name
-          Value: !Sub prometheus-server
+          Value: prometheus-server

@@ -19,8 +19,9 @@
     chdir: ~/backend
 
 - name: install and start app
-  shell:  
+  shell: |
     cd ~/backend/dist
+    ls
     export TYPEORM_MIGRATIONS_DIR="./migrations"
     export TYPEORM_MIGRATIONS="./migrations/*.js"
     export TYPEORM_ENTITIES="./modules/domain/**/*.entity.js"

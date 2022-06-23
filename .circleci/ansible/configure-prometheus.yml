@@ -1,6 +1,6 @@
 ---
 
-- name: "configuration play." 
+- name: "prometheus playbook." 
   hosts: web
   remote_user: ubuntu
   become: true
