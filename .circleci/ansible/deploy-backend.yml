@@ -9,6 +9,17 @@
     - ansible_host_key_checking: false
     - ansible_stdout_callback: yaml
   
+  pre_tasks:
+    - name: "wait 300 seconds for target connection to become reachable/usable."
+      wait_for_connection:
+        delay: 60
+        timeout: 300
+
+    - name: "install python for Ansible."
+      apt: 
+        name: python3.8
+        state: present
+
   environment:
     - NODE_ENV: PRODUCTION
     - TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}"

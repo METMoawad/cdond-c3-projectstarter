@@ -19,20 +19,17 @@
     chdir: ~/backend
 
 - name: Adding enviroment variable manual because it's not working, then start main.js
-  command: "{{ item }}"
-  args:
-    chdir: ~/backend/dist
-  with_items:
-    - export TYPEORM_CONNECTION=postgres
-    - export TYPEORM_ENTITIES=./modules/domain/**/*.entity.js
-    - export TYPEORM_MIGRATIONS_DIR='./migrations'
-    - export TYPEORM_HOST=udapeopledb.cibbcvtqdbwp.us-east-1.rds.amazonaws.com
-    - export TYPEORM_HOST=udapeople-db.cmfinkhaadq0.us-east-1.rds.amazonaws.com
-    - export TYPEORM_PORT=5432
-    - export TYPEORM_USERNAME=postgres
-    - export TYPEORM_PASSWORD=postgres2022
-    - export TYPEORM_DATABASE=udadb
-    - pm2 start main.js
+  shell: |
+     cd ~/backend/dist
+     export TYPEORM_CONNECTION=postgres
+     export TYPEORM_ENTITIES=./modules/domain/**/*.entity.js
+     export TYPEORM_MIGRATIONS_DIR='./migrations'
+     export TYPEORM_HOST=udapeople-db.cmfinkhaadq0.us-east-1.rds.amazonaws.com
+     export TYPEORM_PORT=5432
+     export TYPEORM_USERNAME=postgres
+     export TYPEORM_PASSWORD=postgres2022
+     export TYPEORM_DATABASE=udadb
+     pm2 start main.js
 
   environment:
       ENVIRONMENT: production
