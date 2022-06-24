@@ -73,9 +73,9 @@ groups:
 
 
 
-global:
-  resolve_timeout: 1m
-  slack_api_url: 'https://hooks.slack.com/services/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'
+  global:
+   resolve_timeout: 1m
+   slack_api_url: 'https://hooks.slack.com/services/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'
 
   route:
     receiver: 'slack-notifications'
